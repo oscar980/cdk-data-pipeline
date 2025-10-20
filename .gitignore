@@ -8,3 +8,20 @@ __pycache__
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+
+#others
+.aws
+cdk-admin_credentials.csv
+rootkey.csv
+
+# Temporary files
+grant_*.json
+response.json
+*.log
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

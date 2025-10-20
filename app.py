@@ -1,28 +1,26 @@
 #!/usr/bin/env python3
-import os
-
 import aws_cdk as cdk
-
-from cdk_data_pipeline.cdk_data_pipeline_stack import CdkDataPipelineStack
-
+from cdk_data_pipeline.storage_stack import StorageStack
+from cdk_data_pipeline.ingestion_stack import IngestionStack
+from cdk_data_pipeline.glue_stack import GlueStack
+from cdk_data_pipeline.athena_stack import AthenaStack
+# Lake Formation ELIMINADO - causa problemas automáticos
 
 app = cdk.App()
-CdkDataPipelineStack(app, "CdkDataPipelineStack",
-    # If you don't specify 'env', this stack will be environment-agnostic.
-    # Account/Region-dependent features and context lookups will not work,
-    # but a single synthesized template can be deployed anywhere.
 
-    # Uncomment the next line to specialize this stack for the AWS Account
-    # and Region that are implied by the current CLI configuration.
+# 1. Buckets
+storage_stack = StorageStack(app, "StorageStack")
 
-    #env=cdk.Environment(account=os.getenv('CDK_DEFAULT_ACCOUNT'), region=os.getenv('CDK_DEFAULT_REGION')),
+# 2. Lambda de Ingesta
+ingestion_stack = IngestionStack(app, "IngestionStack",
+    data_bucket=storage_stack.data_bucket)
 
-    # Uncomment the next line if you know exactly what Account and Region you
-    # want to deploy the stack to. */
+# 3. Glue Catalog
+glue_stack = GlueStack(app, "GlueStack",
+    data_bucket=storage_stack.data_bucket)
 
-    #env=cdk.Environment(account='123456789012', region='us-east-1'),
-
-    # For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html
-    )
+# 4. Athena WorkGroup
+athena_stack = AthenaStack(app, "AthenaStack",
+    results_bucket=storage_stack.results_bucket)
 
 app.synth()
