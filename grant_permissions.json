@@ -1,0 +1,12 @@
+{
+  "Principal": {
+    "DataLakePrincipalIdentifier": "arn:aws:iam::891377366557:role/GlueStack-CrawlerRoleA9495AEE-6tNBoSTRWSJ3"
+  },
+  "Resource": {
+    "Database": {
+      "CatalogId": "891377366557",
+      "Name": "cdk_data_pipeline_db_users"
+    }
+  },
+  "Permissions": ["ALL"]
+}

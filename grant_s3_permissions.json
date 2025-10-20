@@ -1,0 +1,12 @@
+{
+  "Principal": {
+    "DataLakePrincipalIdentifier": "arn:aws:iam::891377366557:role/GlueStack-CrawlerRoleA9495AEE-6tNBoSTRWSJ3"
+  },
+  "Resource": {
+    "DataLocation": {
+      "CatalogId": "891377366557",
+      "ResourceArn": "arn:aws:s3:::cdk-data-bucket-oscar"
+    }
+  },
+  "Permissions": ["DATA_LOCATION_ACCESS"]
+}

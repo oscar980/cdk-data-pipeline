@@ -1,58 +1,159 @@
+# CDK Data Pipeline
 
-# Welcome to your CDK Python project!
+Pipeline de datos completo usando AWS CDK con Lambda, Glue, Athena y Lake Formation.
 
-This is a blank project for CDK development with Python.
-
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
-
-This project is set up like a standard Python project.  The initialization
-process also creates a virtualenv within this project, stored under the `.venv`
-directory.  To create the virtualenv it assumes that there is a `python3`
-(or `python` for Windows) executable in your path with access to the `venv`
-package. If for any reason the automatic creation of the virtualenv fails,
-you can create the virtualenv manually.
-
-To manually create a virtualenv on MacOS and Linux:
+## 🏗️ Arquitectura
 
 ```
-$ python3 -m venv .venv
+Lambda (Ingesta) → S3 → Glue Crawler → Glue Database → Athena
 ```
 
-After the init process completes and the virtualenv is created, you can use the following
-step to activate your virtualenv.
+### Componentes:
+- **StorageStack**: Buckets S3 para datos y resultados
+- **IngestionStack**: Lambda para ingesta de datos desde APIs
+- **GlueStack**: Base de datos y crawler para detección de esquemas
+- **AthenaStack**: WorkGroup para consultas SQL
+
+## 🚀 Despliegue
+
+### Prerequisitos:
+- AWS CLI configurado
+- CDK instalado (`npm install -g aws-cdk`)
+- Python 3.9+
+- Credenciales AWS válidas
+
+### Pasos:
+
+1. **Clonar el repositorio:**
+   ```bash
+   git clone https://github.com/oscar980/cdk-data-pipeline.git
+   cd cdk-data-pipeline
+   ```
+
+2. **Instalar dependencias:**
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # Linux/Mac
+   # .venv\Scripts\activate  # Windows
+   pip install -r requirements.txt
+   ```
+
+3. **Configurar variables de entorno:**
+   ```bash
+   cp .aws.example .aws
+   # Editar .aws con tus credenciales
+   ```
+
+4. **Desplegar:**
+   ```bash
+   ./deploy.sh
+   ```
+
+## 🔧 Configuración de Lake Formation
+
+**IMPORTANTE**: Después del despliegue, necesitas otorgar permisos de Lake Formation:
+
+```bash
+# 1. Permisos al rol de Glue para la base de datos
+aws lakeformation grant-permissions --cli-input-json file://grant_permissions.json --region us-east-1
+
+# 2. Permisos al rol de Glue para S3
+aws lakeformation grant-permissions --cli-input-json file://grant_s3_permissions.json --region us-east-1
+
+# 3. Permisos al root para la base de datos
+aws lakeformation grant-permissions --cli-input-json file://grant_root_permissions.json --region us-east-1
+
+# 4. Permisos al root para S3
+aws lakeformation grant-permissions --cli-input-json file://grant_root_s3_permissions.json --region us-east-1
+
+# 5. Permisos al root para la tabla
+aws lakeformation grant-permissions --cli-input-json file://grant_root_table_permissions.json --region us-east-1
+```
+
+## 📊 Uso
+
+### 1. Ejecutar Lambda de ingesta:
+```bash
+aws lambda invoke \
+  --function-name IngestionStack-IngestionLambdaEF25F265 \
+  --payload '{"api_url": "https://jsonplaceholder.typicode.com/users"}' \
+  response.json \
+  --region us-east-1
+```
+
+### 2. Ejecutar Glue Crawler:
+```bash
+aws glue start-crawler --name cdk_data_pipeline_crawler --region us-east-1
+```
+
+### 3. Consultar en Athena:
+```sql
+SELECT * FROM cdk_data_pipeline_db_users.users LIMIT 5;
+```
+
+## 🧪 Testing
+
+```bash
+python -m pytest tests/unit/ -v
+```
+
+## 📁 Estructura del Proyecto
 
 ```
-$ source .venv/bin/activate
+cdk-data-pipeline/
+├── cdk_data_pipeline/
+│   ├── storage_stack.py      # Buckets S3
+│   ├── ingestion_stack.py    # Lambda de ingesta
+│   ├── glue_stack.py         # Glue Database y Crawler
+│   ├── athena_stack.py       # Athena WorkGroup
+│   └── lambda_src/
+│       └── data_ingestion.py  # Código Lambda
+├── tests/
+│   └── unit/
+│       └── test_cdk_data_pipeline_stack.py
+├── app.py                    # Aplicación principal CDK
+├── deploy.sh                 # Script de despliegue
+├── grant_*.json              # Archivos de permisos Lake Formation
+└── requirements.txt          # Dependencias Python
 ```
 
-If you are a Windows platform, you would activate the virtualenv like this:
+## 🔧 Configuración
 
-```
-% .venv\Scripts\activate.bat
-```
-
-Once the virtualenv is activated, you can install the required dependencies.
-
-```
-$ pip install -r requirements.txt
+### Variables de entorno (.aws):
+```bash
+export CDK_DEFAULT_ACCOUNT="your-account-id"
+export CDK_DEFAULT_REGION="us-east-1"
+export AWS_ACCESS_KEY_ID="your-access-key"
+export AWS_SECRET_ACCESS_KEY="your-secret-key"
 ```
 
-At this point you can now synthesize the CloudFormation template for this code.
+## 🏷️ Recursos Creados
 
+- **S3 Buckets**: 
+  - `cdk-data-bucket-oscar` (datos)
+  - `cdk-athena-results-oscar` (resultados)
+- **Lambda**: `IngestionStack-IngestionLambdaEF25F265`
+- **Glue Database**: `cdk_data_pipeline_db_users`
+- **Glue Crawler**: `cdk_data_pipeline_crawler`
+- **Athena WorkGroup**: `cdk_data_pipeline_wg_users`
+
+## 🧹 Limpieza
+
+```bash
+cdk destroy --all
 ```
-$ cdk synth
-```
 
-To add additional dependencies, for example other CDK libraries, just add
-them to your `setup.py` file and rerun the `pip install -r requirements.txt`
-command.
+## 📝 Notas
 
-## Useful commands
+- **Lake Formation**: Se activa automáticamente con Glue
+- **Permisos**: Requieren configuración manual inicial usando los archivos `grant_*.json`
+- **Formato de datos**: JSONL (JSON Lines) para mejor compatibilidad
+- **Esquema**: Detectado automáticamente por el crawler
 
- * `cdk ls`          list all stacks in the app
- * `cdk synth`       emits the synthesized CloudFormation template
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk docs`        open CDK documentation
+## 🤝 Contribuir
 
-Enjoy!
+1. Fork el proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request

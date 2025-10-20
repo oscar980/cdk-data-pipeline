@@ -15,8 +15,7 @@ cdk-admin_credentials.csv
 rootkey.csv
 
 # Temporary files
-grant_*.json
-response.json
+
 *.log
 
 # IDE files

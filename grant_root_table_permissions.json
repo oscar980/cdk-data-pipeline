@@ -1,0 +1,13 @@
+{
+  "Principal": {
+    "DataLakePrincipalIdentifier": "arn:aws:iam::891377366557:root"
+  },
+  "Resource": {
+    "Table": {
+      "CatalogId": "891377366557",
+      "DatabaseName": "cdk_data_pipeline_db_users",
+      "Name": "users"
+    }
+  },
+  "Permissions": ["ALL"]
+}
