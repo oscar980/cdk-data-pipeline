@@ -10,7 +10,6 @@ class LakeFormationStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, glue_role_arn: str, data_bucket, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        # Configuración básica de Lake Formation
         self.lf_settings = lf.CfnDataLakeSettings(
             self, "LakeFormationSettings",
             admins=[
@@ -20,14 +19,12 @@ class LakeFormationStack(Stack):
             ]
         )
 
-        # Registrar el bucket S3 en Lake Formation
         self.s3_resource = lf.CfnResource(
             self, "DataBucketResource",
             resource_arn=data_bucket.bucket_arn,
             use_service_linked_role=True
         )
 
-        # Otorgar permisos al rol de Glue para acceder al bucket
         self.s3_permissions = lf.CfnPermissions(
             self, "S3DataPermissions",
             data_lake_principal=lf.CfnPermissions.DataLakePrincipalProperty(
@@ -40,10 +37,8 @@ class LakeFormationStack(Stack):
             ),
             permissions=["DATA_LOCATION_ACCESS"]
         )
-        # Asegurar que el bucket esté registrado antes de dar permisos
         self.s3_permissions.add_dependency(self.s3_resource)
 
-        # Otorgar permisos ALL en la base de datos al rol de Glue
         self.db_permissions = lf.CfnPermissions(
             self, "GlueDatabasePermissions",
             data_lake_principal=lf.CfnPermissions.DataLakePrincipalProperty(

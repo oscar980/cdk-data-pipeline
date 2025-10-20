@@ -10,7 +10,7 @@ http = urllib3.PoolManager()
 def lambda_handler(event, context):
     bucket_name = os.environ.get("BUCKET_NAME")
     
-    # Obtener parámetros del event (más flexible)
+    # Obtener parámetros del event 
     api_source = os.environ.get("API_SOURCE", "users") # Uses default "users" if not set
     api_url = event.get("api_url", "https://jsonplaceholder.typicode.com/users") # Default API URL
     
